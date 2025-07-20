@@ -1,5 +1,5 @@
 import VerifyPasskeyForm from "@/components/forms/auth/verify-passkey-form";
-import React from "react";
+import React, { Suspense } from "react";
 
 const VerifyPasskeyPage = () => {
   const year = new Date().getFullYear();
@@ -132,7 +132,9 @@ const VerifyPasskeyPage = () => {
       </div>
 
       <div className="md:w-1/2 flex flex-col">
-        <VerifyPasskeyForm />
+        <Suspense fallback={<div>Loading form...</div>}>
+          <VerifyPasskeyForm />
+        </Suspense>
         <footer className="py-4 text-center">
           <p className="text-xs text-gray-600">
             © {year} FinTrust. All rights reserved.
