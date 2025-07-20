@@ -18,12 +18,12 @@ interface AdminNavbarProps {
   profile: {
     email: string;
     firstName: string;
-    lastName: string;
+    username: string | null;
   };
 }
 
 const AdminNavbar = ({
-  profile: { email, firstName, lastName },
+  profile: { email, firstName, username },
 }: AdminNavbarProps) => {
   const [scrolled, setScrolled] = useState(false);
 
@@ -84,9 +84,7 @@ const AdminNavbar = ({
                     {firstName[0]}
                   </div>
                   <div className="hidden md:block text-left">
-                    <p className="text-sm font-medium lowercase">
-                      {firstName} {lastName}
-                    </p>
+                    <p className="text-sm font-medium lowercase">{username}</p>
                     <p className="text-xs text-gray-500">Admin Account</p>
                   </div>
                   <ChevronDown className="hidden md:block w-5 h-5 text-gray-400" />

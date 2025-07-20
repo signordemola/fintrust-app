@@ -30,7 +30,7 @@ interface NavBarProps {
   profile: {
     email: string;
     firstName: string;
-    username: string | null; // Updated to allow null
+    username: string | null; 
   };
   initialNotifications: Notification[];
   userBeneficiaries: {
