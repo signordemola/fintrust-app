@@ -132,7 +132,7 @@ const VerifyPasskeyPage = () => {
       </div>
 
       <div className="md:w-1/2 flex flex-col">
-        <Suspense fallback={<div>Loading form...</div>}>
+        <Suspense fallback={<>Loading form...</>}>
           <VerifyPasskeyForm />
         </Suspense>
         <footer className="py-4 text-center">
