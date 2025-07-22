@@ -135,7 +135,7 @@ model Transaction {
   amount            Float
   type              TransactionType
   description       String
-  reference         String?         @unique
+  reference         String?         
   status            TransactionStatus
   date              DateTime
   recipientAccount  String?

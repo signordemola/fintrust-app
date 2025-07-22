@@ -41,6 +41,40 @@ export async function toggleSubscription(userId: string) {
   }
 }
 
+export async function blockUserTransfer(userId: string) {
+  try {
+    if (!(await verifyAdmin())) {
+      console.warn(`Unauthorized attempt by ${userId}`);
+      return { error: "Admin privileges required" };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isTransferBlocked: true },
+    });
+
+    if (!user) {
+      return { error: "User not found" };
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isTransferBlocked: !user.isTransferBlocked,
+      },
+    });
+
+    revalidatePath("/users-panel");
+
+    return { success: true };
+  } catch (error) {
+    console.error(`Toggle failed:`, error);
+    return {
+      error: error instanceof Error ? error.message : "Operation failed",
+    };
+  }
+}
+
 export async function runUserScript(userId: string, scriptType: string) {
   try {
     if (!(await verifyAdmin())) {
@@ -54,6 +88,9 @@ export async function runUserScript(userId: string, scriptType: string) {
         break;
       case "resetData":
         result = await resetUserData(userId);
+        break;
+      case "blockTransfer":
+        result = await blockUserTransfer(userId);
         break;
       default:
         return { error: "Invalid script type" };

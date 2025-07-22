@@ -31,17 +31,17 @@ import { toast } from "sonner";
 
 interface SecuritySettingsModalProps {
   isOpen: boolean;
+  hasPin: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
   isOpen,
+  hasPin,
   onOpenChange,
 }) => {
   const [isPinPending, startPinTransition] = useTransition();
   const [isPasswordPending, startPasswordTransition] = useTransition();
-
-  const hasPin = false;
 
   const pinForm = useForm<
     z.infer<typeof ChangePinSchema> | z.infer<typeof SetPinSchema>

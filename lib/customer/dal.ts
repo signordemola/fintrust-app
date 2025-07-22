@@ -23,6 +23,7 @@ export const getUserProfile = cache(async () => {
         email: true,
         firstName: true,
         username: true,
+        transactionPin: true,
       },
     });
     return profile;

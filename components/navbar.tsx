@@ -30,8 +30,9 @@ interface NavBarProps {
   profile: {
     email: string;
     firstName: string;
-    username: string | null; 
+    username: string | null;
   };
+  hasPin: boolean;
   initialNotifications: Notification[];
   userBeneficiaries: {
     id: string;
@@ -50,6 +51,7 @@ const navItems = [
 
 const NavBar = ({
   profile: { email, firstName, username },
+  hasPin,
   initialNotifications,
   userBeneficiaries,
 }: NavBarProps) => {
@@ -69,6 +71,12 @@ const NavBar = ({
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!hasPin) {
+      setIsSecurityModalOpen(true);
+    }
+  }, [hasPin]);
 
   const handleLogout = async () => {
     await logout();
@@ -279,6 +287,7 @@ const NavBar = ({
       </div>
       <SecuritySettingsModal
         isOpen={isSecurityModalOpen}
+        hasPin={hasPin}
         onOpenChange={setIsSecurityModalOpen}
       />
       <AccountManagementModal

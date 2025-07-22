@@ -11,6 +11,7 @@ import { BasicUserData } from "@/types/users";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
 import {
+  BlockTransferDialog,
   PopulateDataDialog,
   ResetDataDialog,
   SubscriptionToggleDialog,
@@ -18,10 +19,11 @@ import {
 } from "./user-action-dialogs";
 
 export function UserActions({ user }: { user: BasicUserData }) {
-  const [populateDialogOpen, setPopulateDialogOpen] = useState(false);
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
-  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [populateDialogOpen, setPopulateDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [blockDialogOpen, setBLockDialogOpen] = useState(false);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
   return (
     <div className="flex justify-end">
@@ -41,6 +43,9 @@ export function UserActions({ user }: { user: BasicUserData }) {
           <DropdownMenuItem onClick={() => setResetDialogOpen(true)}>
             Reset Data
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setBLockDialogOpen(true)}>
+            Block Transaction
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setDetailDialogOpen(true)}>
             View User Details
           </DropdownMenuItem>
@@ -58,15 +63,20 @@ export function UserActions({ user }: { user: BasicUserData }) {
         open={populateDialogOpen}
         onOpenChange={setPopulateDialogOpen}
       />
-      <UserDetailDialog
-        user={user}
-        open={detailDialogOpen}
-        onOpenChange={setDetailDialogOpen}
-      />
       <ResetDataDialog
         userId={user.id}
         open={resetDialogOpen}
         onOpenChange={setResetDialogOpen}
+      />
+      <BlockTransferDialog
+        userId={user.id}
+        open={blockDialogOpen}
+        onOpenChange={setBLockDialogOpen}
+      />
+      <UserDetailDialog
+        user={user}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
       />
     </div>
   );

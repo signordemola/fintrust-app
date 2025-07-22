@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
+import { verifyPassword } from "@/lib/password";
 import { getUserSession } from "@/lib/session";
 
 export const transferBetweenAccounts = async ({
@@ -8,17 +9,24 @@ export const transferBetweenAccounts = async ({
   toAccountId,
   amount,
   reference,
+  pin,
 }: {
   fromAccountId: string;
   toAccountId: string;
   amount: number;
   reference: string;
+  pin: string;
 }) => {
   const session = await getUserSession();
   if (!session) return { error: "No active session." };
 
   const amountRegex = /^\d+(\.\d{1,2})?$/;
   const referenceRegex = /^[a-zA-Z0-9\s]{0,50}$/;
+  const pinRegex = /^\d{4}$/;
+
+  if (!pinRegex.test(pin)) {
+    return { error: "PIN must be exactly 4 digits." };
+  }
 
   if (!amountRegex.test(amount.toString())) {
     return {
@@ -47,6 +55,15 @@ export const transferBetweenAccounts = async ({
 
     if (user.isTransferBlocked) {
       return { error: "Transfers are currently blocked for this account." };
+    }
+
+    if (!user.transactionPin) {
+      return { error: "Transaction PIN not set." };
+    }
+
+    const isValidPin = await verifyPassword(pin, user.transactionPin);
+    if (!isValidPin) {
+      return { error: "Invalid transaction PIN." };
     }
 
     const accounts = (await prisma.account.findMany({
@@ -126,7 +143,7 @@ export const transferBetweenAccounts = async ({
     return { success: "Transfer completed successfully!" };
   } catch (error) {
     console.error("Transfer error:", error);
-    return { error: "Something went wrong while processing the transfer." };
+    return { error: `Transfer failed` };
   }
 };
 
@@ -135,11 +152,13 @@ export const transferToFinTrustUser = async ({
   recipientEmail,
   amount,
   reference,
+  pin,
 }: {
   fromAccountId: string;
   recipientEmail: string;
   amount: number;
   reference: string;
+  pin: string;
 }) => {
   const session = await getUserSession();
   if (!session) return { error: "No active session." };
@@ -147,6 +166,11 @@ export const transferToFinTrustUser = async ({
   const amountRegex = /^\d+(\.\d{1,2})?$/;
   const referenceRegex = /^[a-zA-Z0-9\s]{0,50}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const pinRegex = /^\d{4}$/;
+
+  if (!pinRegex.test(pin)) {
+    return { error: "PIN must be exactly 4 digits." };
+  }
 
   if (!amountRegex.test(amount.toString())) {
     return {
@@ -180,6 +204,15 @@ export const transferToFinTrustUser = async ({
 
     if (user.isTransferBlocked) {
       return { error: "Transfers are currently blocked for this account." };
+    }
+
+    if (!user.transactionPin) {
+      return { error: "Transaction PIN not set." };
+    }
+
+    const isValidPin = await verifyPassword(pin, user.transactionPin);
+    if (!isValidPin) {
+      return { error: "Invalid transaction PIN." };
     }
 
     if (user.email === recipientEmail) {
@@ -301,6 +334,7 @@ export const transferInternational = async ({
   currency,
   amount,
   reference,
+  pin,
 }: {
   fromAccountId: string;
   recipientName: string;
@@ -312,6 +346,7 @@ export const transferInternational = async ({
   currency: string;
   amount: number;
   reference: string;
+  pin: string;
 }) => {
   const session = await getUserSession();
   if (!session) return { error: "No active session." };
@@ -322,6 +357,11 @@ export const transferInternational = async ({
   const ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/;
   const nameRegex = /^[a-zA-Z\s]{2,100}$/;
   const bankNameRegex = /^[a-zA-Z0-9\s&-]{2,100}$/;
+  const pinRegex = /^\d{4}$/;
+
+  if (!pinRegex.test(pin)) {
+    return { error: "PIN must be exactly 4 digits." };
+  }
 
   if (!amountRegex.test(amount.toString())) {
     return {
@@ -379,6 +419,15 @@ export const transferInternational = async ({
       return { error: "Transfers are currently blocked for this account." };
     }
 
+    if (!user.transactionPin) {
+      return { error: "Transaction PIN not set." };
+    }
+
+    const isValidPin = await verifyPassword(pin, user.transactionPin);
+    if (!isValidPin) {
+      return { error: "Invalid transaction PIN." };
+    }
+
     const fromAccount = (await prisma.account.findUnique({
       where: { id: fromAccountId, userId: user.id },
       select: { id: true, balance: true, type: true, accountNumber: true },
@@ -415,6 +464,7 @@ export const transferInternational = async ({
           recipientAccount: accountNumber,
           recipientBank: bankName,
           swiftCode: swiftCode,
+          pinVerified: true,
           category: "Transfer",
           isFraudSuspected: false,
           createdAt: currentDate,
@@ -441,6 +491,7 @@ export const transferToUSBank = async ({
   accountHolderName,
   amount,
   reference,
+  pin,
 }: {
   fromAccountId: string;
   bankName: string;
@@ -448,6 +499,7 @@ export const transferToUSBank = async ({
   accountHolderName: string;
   amount: number;
   reference: string;
+  pin: string;
 }) => {
   const session = await getUserSession();
   if (!session) return { error: "No active session." };
@@ -457,6 +509,11 @@ export const transferToUSBank = async ({
   const accountNumberRegex = /^\d{8,17}$/;
   const nameRegex = /^[a-zA-Z\s]{2,100}$/;
   const bankNameRegex = /^[a-zA-Z0-9\s&-]{2,100}$/;
+  const pinRegex = /^\d{4}$/;
+
+  if (!pinRegex.test(pin)) {
+    return { error: "PIN must be exactly 4 digits." };
+  }
 
   if (!amountRegex.test(amount.toString())) {
     return {
@@ -497,6 +554,15 @@ export const transferToUSBank = async ({
 
     if (user.isTransferBlocked) {
       return { error: "Transfers are currently blocked for this account." };
+    }
+
+    if (!user.transactionPin) {
+      return { error: "Transaction PIN not set." };
+    }
+
+    const isValidPin = await verifyPassword(pin, user.transactionPin);
+    if (!isValidPin) {
+      return { error: "Invalid transaction PIN." };
     }
 
     const fromAccount = (await prisma.account.findUnique({

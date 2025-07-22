@@ -39,7 +39,8 @@ const DashboardPage = async () => {
   ]);
 
   if (!profile) return null;
-  // if (!allAccounts) return null;
+
+  const hasPin = !!profile.transactionPin;
 
   const beneficiaries = beneficiariesResult?.beneficiaries || [];
 
@@ -54,6 +55,7 @@ const DashboardPage = async () => {
         profile={profile}
         initialNotifications={notifications}
         userBeneficiaries={beneficiaries}
+        hasPin={hasPin}
       />
       <Header firstName={profile?.firstName} balance={checkingBalance} />
       <AccountOverview allAccountDetails={allAccountDetails} />
