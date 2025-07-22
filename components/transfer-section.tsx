@@ -6,7 +6,18 @@ import FinTrustUserForm from "./forms/transaction-form/fintrust-user";
 import USBankForm from "./forms/transaction-form/usbank-form";
 import InternationalForm from "./forms/transaction-form/international-form";
 
-const TransferSection = () => {
+interface TransferSectionProps {
+  allAccounts: {
+    id: string;
+    balance: number;
+    accountNumber: string;
+    holder: string;
+    type: string;
+    status: string;
+  }[];
+}
+
+const TransferSection = ({ allAccounts }: TransferSectionProps) => {
   return (
     <div id="transfer-section" className="mb-8 scroll-smooth scroll-mt-30">
       <div className="flex items-center justify-between mb-6">
@@ -46,8 +57,11 @@ const TransferSection = () => {
               Choose a transfer type to get started
             </p>
           </div>
-          <div className="bg-white rounded-2xl shadow-xl mb-12 overflow-hidden ">
-            <Tabs defaultValue="between-accounts" className="w-full rounded-md shadow-card">
+          <div className="bg-white rounded-2xl shadow-xl mb-12 overflow-hidden">
+            <Tabs
+              defaultValue="between-accounts"
+              className="w-full rounded-md shadow-card"
+            >
               <TabsList className="grid grid-cols-2 sm:grid-cols-4 mb-16 w-full">
                 <TabsTrigger
                   value="between-accounts"
@@ -151,22 +165,22 @@ const TransferSection = () => {
                   value="between-accounts"
                   className="max-w-4xl mx-auto"
                 >
-                  <BetweenAccountsForm />
+                  <BetweenAccountsForm allAccounts={allAccounts} />
                 </TabsContent>
                 <TabsContent
                   value="northstone-user"
                   className="max-w-4xl mx-auto"
                 >
-                  <FinTrustUserForm />
+                  <FinTrustUserForm allAccounts={allAccounts} />
                 </TabsContent>
                 <TabsContent value="us-bank" className="max-w-4xl mx-auto">
-                  <USBankForm />
+                  <USBankForm allAccounts={allAccounts} />
                 </TabsContent>
                 <TabsContent
                   value="international"
                   className="max-w-4xl mx-auto"
                 >
-                  <InternationalForm />
+                  <InternationalForm allAccounts={allAccounts} />
                 </TabsContent>
               </div>
             </Tabs>

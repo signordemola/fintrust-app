@@ -1,4 +1,6 @@
-import { handlePrismaError, logger, withRetry } from "@/utils/admin-utils";
+"use server";
+
+import { handlePrismaError, withRetry } from "@/utils/admin-utils";
 import { PrismaClient } from "@prisma/client";
 
 export async function resetUserData(
@@ -10,8 +12,6 @@ export async function resetUserData(
   });
 
   try {
-    logger.info(`Starting data reset for user: ${identifier}`);
-
     const user = await withRetry(() =>
       prisma.user.findFirst({
         where: {
@@ -25,43 +25,24 @@ export async function resetUserData(
       throw new Error(`User with ID or email '${identifier}' not found.`);
     }
 
-    logger.info(`Found user: ${user.email} (ID: ${user.id})`);
+    await prisma.$transaction([
+      prisma.transaction.deleteMany({ where: { userId: user.id } }),
+      prisma.card.deleteMany({ where: { userId: user.id } }),
+      prisma.mobileDeposit.deleteMany({ where: { userId: user.id } }),
+      prisma.notification.deleteMany({ where: { userId: user.id } }),
+      prisma.session.deleteMany({ where: { userId: user.id } }),
+      prisma.bill.deleteMany({ where: { userId: user.id } }),
+      prisma.statement.deleteMany({ where: { userId: user.id } }),
+      prisma.beneficiary.deleteMany({ where: { userId: user.id } }),
+      prisma.account.deleteMany({ where: { userId: user.id } }),
+      prisma.auditLog.deleteMany({ where: { userId: user.id } }),
+    ]);
 
-    // Remove dependent models in correct order due to FK constraints
-    await withRetry(() =>
-      prisma.transaction.deleteMany({ where: { userId: user.id } })
-    );
-    await withRetry(() =>
-      prisma.card.deleteMany({ where: { userId: user.id } })
-    );
-    await withRetry(() =>
-      prisma.mobileDeposit.deleteMany({ where: { userId: user.id } })
-    );
-    await withRetry(() =>
-      prisma.notification.deleteMany({ where: { userId: user.id } })
-    );
-    await withRetry(() =>
-      prisma.session.deleteMany({ where: { userId: user.id } })
-    );
-    await withRetry(() =>
-      prisma.bill.deleteMany({ where: { userId: user.id } })
-    );
-    await withRetry(() =>
-      prisma.statement.deleteMany({ where: { userId: user.id } })
-    );
-    await withRetry(() =>
-      prisma.account.deleteMany({ where: { userId: user.id } })
-    );
-    await withRetry(() =>
-      prisma.auditLog.deleteMany({ where: { userId: user.id } })
-    );
-
-    logger.info(`Data reset complete for user: ${user.email} (ID: ${user.id})`);
     return {
       message: `User ${user.id} data cleared successfully.`,
       userId: user.id,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     throw handlePrismaError(error);
   } finally {
     await prisma.$disconnect();

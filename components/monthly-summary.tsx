@@ -1,4 +1,16 @@
-const MonthlySummary = () => {
+interface MonthlySummaryProps {
+  income: number;
+  incomeCount: number;
+  outgoing: number;
+  outgoingCount: number;
+}
+
+const MonthlySummary = ({
+  income,
+  incomeCount,
+  outgoing,
+  outgoingCount,
+}: MonthlySummaryProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
       <div className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 relative overflow-hidden">
@@ -25,7 +37,13 @@ const MonthlySummary = () => {
               <p className="text-sm font-medium text-green-600">
                 Monthly Income
               </p>
-              <p className="text-2xl font-semibold text-gray-900 mt-1">$0.00</p>
+              <p className="text-2xl font-semibold text-gray-900 mt-1">
+                $
+                {income.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-2 mt-2">
@@ -33,12 +51,12 @@ const MonthlySummary = () => {
               <div className="w-full bg-gray-100 rounded-full h-1.5">
                 <div
                   className="bg-green-500 h-1.5 rounded-full"
-                  style={{ width: "100%" }}
+                  style={{ width: incomeCount > 0 ? "100%" : "0%" }}
                 ></div>
               </div>
             </div>
             <span className="text-xs font-medium text-gray-500">
-              0 deposits
+              {incomeCount} deposit{incomeCount !== 1 ? "s" : ""}
             </span>
           </div>
         </div>
@@ -67,7 +85,13 @@ const MonthlySummary = () => {
               <p className="text-sm font-medium text-red-600">
                 Monthly Outgoing
               </p>
-              <p className="text-2xl font-semibold text-gray-900 mt-1">$0.00</p>
+              <p className="text-2xl font-semibold text-gray-900 mt-1">
+                $
+                {outgoing.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-2 mt-2">
@@ -75,12 +99,12 @@ const MonthlySummary = () => {
               <div className="w-full bg-gray-100 rounded-full h-1.5">
                 <div
                   className="bg-red-500 h-1.5 rounded-full"
-                  style={{ width: "100%" }}
+                  style={{ width: outgoingCount > 0 ? "100%" : "0%" }}
                 ></div>
               </div>
             </div>
             <span className="text-xs font-medium text-gray-500">
-              0 payments
+              {outgoingCount} payment{outgoingCount !== 1 ? "s" : ""}
             </span>
           </div>
         </div>

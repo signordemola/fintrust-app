@@ -1,11 +1,20 @@
+"use server";
+
 import { faker } from "@faker-js/faker";
 import {
   PrismaClient,
   Prisma,
   TransactionStatus,
+  TransactionType,
   AccountType,
 } from "@prisma/client";
-import { addDays, addMonths, subYears } from "date-fns";
+import {
+  addDays,
+  addMonths,
+  subYears,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
 import { logger, withRetry } from "@/utils/admin-utils";
 
 interface PopulationConfig {
@@ -31,6 +40,13 @@ const getRandomDate = (): Date => {
   });
 };
 
+const getCurrentMonthDate = (): Date => {
+  return faker.date.between({
+    from: startOfMonth(new Date("2025-07-01")),
+    to: endOfMonth(new Date("2025-07-31")),
+  });
+};
+
 const getRandomAmount = (min: number, max: number): number => {
   return faker.number.int({ min, max });
 };
@@ -50,68 +66,66 @@ const validateCardNumber = (cardNumber: string): string => {
   ];
   const selectedType = faker.helpers.arrayElement(cardTypes);
   if (!selectedType.pattern.test(cardNumber)) {
-    return faker.finance.creditCardNumber(selectedType.type);
+    return faker.finance.creditCardNumber({ issuer: selectedType.type });
   }
   return cardNumber;
 };
 
 const specificTransactions = [
   {
-    type: "TRANSFER_EXTERNAL",
-    description:
-      "Transfer to Bank of America (Nuskip designs inc.): Deposit for Design",
-    amount: 120000,
+    type: TransactionType.TRANSFER_US_BANK,
+    description: "Investment transfer to Morgan Stanley",
+    amount: 500000,
   },
   {
-    type: "TRANSFER_EXTERNAL",
-    description:
-      "Transfer to Bank of America (Knitted Brittany Co.): Deposit for design",
-    amount: 120000,
+    type: TransactionType.TRANSFER_US_BANK,
+    description: "Payment to Sotheby's for art auction",
+    amount: 250000,
   },
   {
-    type: "WITHDRAWAL",
-    description: "Gas at Chevron",
-    amount: 45,
+    type: TransactionType.BILL_PAYMENT,
+    description: "Private jet charter via NetJets",
+    amount: 75000,
   },
   {
-    type: "WITHDRAWAL",
-    description: "Groceries at Walmart",
-    amount: 274,
+    type: TransactionType.BILL_PAYMENT,
+    description: "Purchase at Tiffany & Co.",
+    amount: 15000,
   },
   {
-    type: "WITHDRAWAL",
-    description: "Electric bill via Florida Power & Light (FPL)",
-    amount: 130,
+    type: TransactionType.BILL_PAYMENT,
+    description: "Utility bill for Miami penthouse",
+    amount: 2500,
   },
   {
-    type: "WITHDRAWAL",
-    description: "Pharmacy purchase at CVS",
-    amount: 75,
+    type: TransactionType.BILL_PAYMENT,
+    description: "Yacht maintenance service",
+    amount: 30000,
   },
   {
-    type: "WITHDRAWAL",
-    description: "Electronics at Best Buy",
-    amount: 250,
+    type: TransactionType.BILL_PAYMENT,
+    description: "Membership at Soho House",
+    amount: 5000,
   },
   {
-    type: "WITHDRAWAL",
-    description: "Hotel reservations at Agora Life Hotel",
-    amount: 5694,
+    type: TransactionType.BILL_PAYMENT,
+    description: "Private chef service for event",
+    amount: 10000,
   },
   {
-    type: "WITHDRAWAL",
-    description: "Gym membership at Planet Fitness",
-    amount: 80,
+    type: TransactionType.BILL_PAYMENT,
+    description: "Luxury car lease (Rolls-Royce)",
+    amount: 20000,
   },
   {
-    type: "WITHDRAWAL",
-    description: "Return ticket Yakima to Istanbul",
-    amount: 3648,
+    type: TransactionType.BILL_PAYMENT,
+    description: "Charity gala sponsorship",
+    amount: 50000,
   },
   {
-    type: "DEPOSIT",
-    description: "Daveo deposit contract payment",
-    amount: 555000,
+    type: TransactionType.DEPOSIT,
+    description: "Dividend payment from investment portfolio",
+    amount: 1000000,
   },
 ];
 
@@ -147,27 +161,48 @@ export async function populateUserData(
 
     logger.info(`Found user: ${user.email} (ID: ${user.id})`);
 
-    // Create Checking and Savings Accounts
-    const userAccounts = [];
-    const accountTypes = [AccountType.CHECKING, AccountType.SAVINGS];
-    for (const accType of accountTypes) {
-      const initialBalance =
-        accType === AccountType.SAVINGS
-          ? getRandomAmount(500000, 1000000)
-          : getRandomAmount(1000000, 1500000);
-      const account = await withRetry(() =>
-        prisma.account.create({
+    const existingAccounts = await prisma.account.findMany({
+      where: { userId: user.id },
+    });
+
+    if (existingAccounts.length > 0) {
+      logger.info(`User ${user.id} already has accounts, skipping population.`);
+      return {
+        message: `User ${user.id} data already populated`,
+        userId: user.id,
+      };
+    }
+
+    const userAccounts: {
+      id: string;
+      type: AccountType;
+      accountNumber: string;
+      balance: number;
+    }[] = [];
+    const accountTypes = [
+      { type: AccountType.CHECKING, targetBalance: 719725 },
+      { type: AccountType.SAVINGS, targetBalance: 5704583 },
+    ];
+
+    const billIds: string[] = [];
+    const transactions: Prisma.TransactionCreateManyInput[] = [];
+    const cards: Prisma.CardCreateManyInput[] = [];
+    const notifications: Prisma.NotificationCreateManyInput[] = [];
+
+    await prisma.$transaction(async (tx) => {
+      for (const acc of accountTypes) {
+        const account = await tx.account.create({
           data: {
             userId: user.id,
-            type: accType,
+            type: acc.type,
             accountNumber: validateAccountNumber(
               faker.finance.accountNumber(10)
             ),
             routingNumber: faker.finance.routingNumber(),
-            balance: initialBalance,
+            balance: acc.targetBalance,
             status: "ACTIVE",
             interestRate:
-              accType === AccountType.SAVINGS
+              acc.type === AccountType.SAVINGS
                 ? faker.number.float({
                     min: 0.01,
                     max: 0.05,
@@ -178,290 +213,357 @@ export async function populateUserData(
             createdAt: getRandomDate(),
             updatedAt: getRandomDate(),
           },
-        })
+        });
+        userAccounts.push({
+          id: account.id,
+          type: account.type,
+          accountNumber: account.accountNumber,
+          balance: account.balance,
+        });
+        logger.debug(
+          `Created ${account.type} account: ${
+            account.accountNumber
+          } with balance ${account.balance.toFixed(0)}`
+        );
+      }
+
+      const checkingAccount = userAccounts.find(
+        (a) => a.type === AccountType.CHECKING
       );
-      userAccounts.push(account);
-      logger.debug(
-        `Created ${account.type} account: ${
-          account.accountNumber
-        } with balance ${account.balance.toFixed(0)}`
-      );
-    }
+      if (checkingAccount) {
+        const billPayments = [
+          {
+            accountId: checkingAccount.id,
+            userId: user.id,
+            provider: "Florida Power & Light (FPL)",
+            accountNumber: validateAccountNumber(
+              faker.finance.accountNumber(8)
+            ),
+            amount: getRandomAmount(500, 1500),
+            dueDate: addDays(getCurrentMonthDate(), 5),
+            status: "PAID",
+            paymentDate: getCurrentMonthDate(),
+            confirmationNo: faker.string.uuid(),
+            isRecurring: true,
+            recurringFreq: "MONTHLY",
+            recurringEndDate: addMonths(getCurrentMonthDate(), 12),
+            createdAt: getCurrentMonthDate(),
+            updatedAt: getCurrentMonthDate(),
+          },
+          {
+            accountId: checkingAccount.id,
+            userId: user.id,
+            provider: "T-Mobile Wireless",
+            accountNumber: validateAccountNumber(
+              faker.finance.accountNumber(8)
+            ),
+            amount: getRandomAmount(200, 500),
+            dueDate: addDays(getCurrentMonthDate(), 5),
+            status: "PAID",
+            paymentDate: getCurrentMonthDate(),
+            confirmationNo: faker.string.uuid(),
+            isRecurring: true,
+            recurringFreq: "MONTHLY",
+            recurringEndDate: addMonths(getCurrentMonthDate(), 12),
+            createdAt: getCurrentMonthDate(),
+            updatedAt: getCurrentMonthDate(),
+          },
+          {
+            accountId: checkingAccount.id,
+            userId: user.id,
+            provider: "Comcast Xfinity",
+            accountNumber: validateAccountNumber(
+              faker.finance.accountNumber(8)
+            ),
+            amount: getRandomAmount(300, 600),
+            dueDate: addDays(getCurrentMonthDate(), 5),
+            status: "PAID",
+            paymentDate: getCurrentMonthDate(),
+            confirmationNo: faker.string.uuid(),
+            isRecurring: true,
+            recurringFreq: "MONTHLY",
+            recurringEndDate: addMonths(getCurrentMonthDate(), 12),
+            createdAt: getCurrentMonthDate(),
+            updatedAt: getCurrentMonthDate(),
+          },
+          {
+            accountId: checkingAccount.id,
+            userId: user.id,
+            provider: "Saks Fifth Avenue",
+            accountNumber: validateAccountNumber(
+              faker.finance.accountNumber(8)
+            ),
+            amount: getRandomAmount(5000, 20000),
+            dueDate: addDays(getCurrentMonthDate(), 5),
+            status: "PAID",
+            paymentDate: getCurrentMonthDate(),
+            confirmationNo: faker.string.uuid(),
+            isRecurring: false,
+            createdAt: getCurrentMonthDate(),
+            updatedAt: getCurrentMonthDate(),
+          },
+          {
+            accountId: checkingAccount.id,
+            userId: user.id,
+            provider: "NetJets Private Aviation",
+            accountNumber: validateAccountNumber(
+              faker.finance.accountNumber(8)
+            ),
+            amount: getRandomAmount(50000, 150000),
+            dueDate: addDays(getCurrentMonthDate(), 5),
+            status: "PAID",
+            paymentDate: getCurrentMonthDate(),
+            confirmationNo: faker.string.uuid(),
+            isRecurring: false,
+            createdAt: getCurrentMonthDate(),
+            updatedAt: getCurrentMonthDate(),
+          },
+        ];
 
-    // Create Transactions
-    const billIds: string[] = [];
-    for (const account of userAccounts) {
-      let currentBalance = account.balance;
-      const transactions: Prisma.TransactionCreateManyInput[] = [];
+        await tx.bill.createMany({ data: billPayments, skipDuplicates: true });
+        billIds.push(
+          ...(
+            await tx.bill.findMany({
+              where: { userId: user.id },
+              select: { id: true },
+            })
+          ).map((b) => b.id)
+        );
+        logger.debug(`Created ${billIds.length} bill payments`);
+      }
 
-      // Use specific transactions and fill remaining with random ones
-      for (let i = 0; i < config.numTransactionsPerAccount; i++) {
-        const isSpecific = i < specificTransactions.length;
-        const txn = isSpecific
-          ? specificTransactions[i]
-          : {
-              type: faker.helpers.arrayElement([
-                "DEPOSIT",
-                "WITHDRAWAL",
-                "TRANSFER_EXTERNAL",
-              ]),
-              description: faker.finance.transactionDescription(),
-              amount: getRandomAmount(50, 5000),
-            };
-        const isDeposit = txn.type === "DEPOSIT";
-        const status = faker.helpers.arrayElement([
-          TransactionStatus.COMPLETED,
-          TransactionStatus.PENDING,
-          TransactionStatus.FAILED,
-        ]);
-        const amount =
-          isDeposit && isSpecific
-            ? getRandomAmount(txn.amount * 0.8, txn.amount * 1.2)
-            : txn.amount;
+      for (const account of userAccounts) {
+        const isChecking = account.type === AccountType.CHECKING;
+        const targetBalance = isChecking ? 719725 : 5704583;
+        let currentBalance = account.balance;
+        const usedReferences = new Set<string>(); // Reset per account
 
-        if (!isDeposit && currentBalance - amount < 0) {
-          continue;
+        const generateUniqueReference = (): string => {
+          let ref: string;
+          do {
+            ref = faker.string.uuid();
+          } while (usedReferences.has(ref));
+          usedReferences.add(ref);
+          return ref;
+        };
+
+        transactions.length = 0; // Clear transactions array for each account
+
+        transactions.push({
+          userId: user.id,
+          accountId: account.id,
+          amount: getRandomAmount(50000, 200000),
+          type: TransactionType.DEPOSIT,
+          description: "Business income deposit",
+          reference: generateUniqueReference(),
+          status: TransactionStatus.COMPLETED,
+          date: getCurrentMonthDate(),
+          pinVerified: true,
+          category: "Income",
+          isFraudSuspected: false,
+          createdAt: getCurrentMonthDate(),
+          updatedAt: getCurrentMonthDate(),
+        });
+        currentBalance += transactions[transactions.length - 1].amount;
+
+        for (let i = 0; i < config.numTransactionsPerAccount - 1; i++) {
+          const isSpecific = i < specificTransactions.length;
+          const txn = isSpecific
+            ? specificTransactions[i]
+            : {
+                type: faker.helpers.arrayElement([
+                  TransactionType.DEPOSIT,
+                  TransactionType.BILL_PAYMENT,
+                  TransactionType.TRANSFER_US_BANK,
+                  TransactionType.TRANSFER_INTERNATIONAL,
+                  TransactionType.WITHDRAWAL,
+                  TransactionType.MOBILE_DEPOSIT,
+                  TransactionType.TRANSFER_FINTRUST,
+                ]),
+                description: faker.finance.transactionDescription(),
+                amount: getRandomAmount(
+                  isChecking ? 1000 : 5000,
+                  isChecking ? 50000 : 200000
+                ),
+              };
+          const isDeposit =
+            txn.type === TransactionType.DEPOSIT ||
+            txn.type === TransactionType.MOBILE_DEPOSIT;
+          const status =
+            i < 4
+              ? TransactionStatus.COMPLETED
+              : faker.helpers.arrayElement([
+                  TransactionStatus.COMPLETED,
+                  TransactionStatus.PENDING,
+                  TransactionStatus.FAILED,
+                  TransactionStatus.CANCELLED,
+                  TransactionStatus.REVERSED,
+                  TransactionStatus.PROCESSING,
+                ]);
+          const amount =
+            isDeposit && isSpecific
+              ? getRandomAmount(txn.amount * 0.8, txn.amount * 1.2)
+              : txn.amount;
+
+          if (!isDeposit && currentBalance - amount < 0) {
+            continue;
+          }
+
+          currentBalance = isDeposit
+            ? currentBalance + amount
+            : currentBalance - amount;
+
+          transactions.push({
+            userId: user.id,
+            accountId: account.id,
+            amount,
+            type: txn.type,
+            description: txn.description,
+            reference: generateUniqueReference(),
+            status,
+            date: i < 4 ? getCurrentMonthDate() : getRandomDate(),
+            recipientAccount:
+              txn.type === TransactionType.TRANSFER_US_BANK ||
+              txn.type === TransactionType.TRANSFER_INTERNATIONAL ||
+              txn.type === TransactionType.TRANSFER_FINTRUST
+                ? validateAccountNumber(faker.finance.accountNumber(10))
+                : null,
+            recipientBank:
+              txn.type === TransactionType.TRANSFER_US_BANK ||
+              txn.type === TransactionType.TRANSFER_INTERNATIONAL ||
+              txn.type === TransactionType.TRANSFER_FINTRUST
+                ? faker.company.name()
+                : null,
+            swiftCode:
+              txn.type === TransactionType.TRANSFER_INTERNATIONAL
+                ? faker.finance.iban()
+                : null,
+            pinVerified: faker.datatype.boolean(),
+            category: txn.description.includes("bill")
+              ? "Utilities"
+              : faker.finance.transactionType(),
+            isFraudSuspected: faker.datatype.boolean({ probability: 0.1 }),
+            createdAt: i < 4 ? getCurrentMonthDate() : getRandomDate(),
+            updatedAt: i < 4 ? getCurrentMonthDate() : getRandomDate(),
+            billId:
+              txn.type === TransactionType.BILL_PAYMENT && billIds.length > 0
+                ? faker.helpers.arrayElement(billIds)
+                : null,
+          });
         }
 
-        currentBalance = isDeposit
-          ? currentBalance + amount
-          : currentBalance - amount;
+        if (Math.abs(currentBalance - targetBalance) > 100) {
+          const adjustment = targetBalance - currentBalance;
+          transactions.push({
+            userId: user.id,
+            accountId: account.id,
+            type:
+              adjustment > 0
+                ? TransactionType.DEPOSIT
+                : TransactionType.BILL_PAYMENT,
+            status: TransactionStatus.COMPLETED,
+            amount: Math.abs(adjustment),
+            description:
+              adjustment > 0
+                ? "Balance Adjustment Deposit"
+                : "Balance Adjustment Payment",
+            reference: generateUniqueReference(),
+            date: getCurrentMonthDate(),
+            pinVerified: true,
+            category: "Adjustment",
+            isFraudSuspected: false,
+            createdAt: getCurrentMonthDate(),
+            updatedAt: getCurrentMonthDate(),
+            billId:
+              adjustment > 0
+                ? null
+                : billIds.length > 0
+                ? faker.helpers.arrayElement(billIds)
+                : null,
+          });
+          currentBalance = targetBalance;
+        }
 
-        transactions.push({
-          userId: user.id,
-          accountId: account.id,
-          amount,
-          type: txn.type,
-          description: txn.description,
-          reference: faker.string.uuid(),
-          status,
-          date: getRandomDate(),
-          recipientAccount:
-            txn.type === "TRANSFER_EXTERNAL"
-              ? validateAccountNumber(faker.finance.accountNumber(10))
-              : null,
-          recipientBank:
-            txn.type === "TRANSFER_EXTERNAL" ? "Bank of America" : null,
-          swiftCode:
-            txn.type === "TRANSFER_EXTERNAL" ? faker.finance.iban() : null,
-          pinVerified: faker.datatype.boolean(),
-          category: txn.description.includes("bill")
-            ? "Utilities"
-            : faker.finance.transactionType(),
-          isFraudSuspected: faker.datatype.boolean(0.1),
-          createdAt: getRandomDate(),
-          updatedAt: getRandomDate(),
-          billId: txn.description.includes("bill") ? billIds[0] : null,
-        });
-      }
+        await tx.transaction.createMany({ data: transactions });
+        logger.debug(
+          `Created ${transactions.length} transactions for account ${account.accountNumber}`
+        );
 
-      // Adjust balance to ~$1,000,000
-      if (Math.abs(currentBalance - 1000000) > 10000) {
-        const adjustment = 1000000 - currentBalance;
-        transactions.push({
-          userId: user.id,
-          accountId: account.id,
-          type: adjustment > 0 ? "DEPOSIT" : "WITHDRAWAL",
-          status: TransactionStatus.COMPLETED,
-          amount: Math.abs(adjustment),
-          description:
-            adjustment > 0
-              ? "Balance Adjustment Deposit"
-              : "Balance Adjustment Withdrawal",
-          reference: faker.string.uuid(),
-          date: getRandomDate(),
-          pinVerified: true,
-          category: "Adjustment",
-          isFraudSuspected: false,
-          createdAt: getRandomDate(),
-          updatedAt: getRandomDate(),
-        });
-        currentBalance = 1000000;
-      }
-
-      await withRetry(() =>
-        prisma.transaction.createMany({ data: transactions })
-      );
-      logger.debug(
-        `Created ${transactions.length} transactions for account ${account.accountNumber}`
-      );
-
-      await withRetry(() =>
-        prisma.account.update({
+        await tx.account.update({
           where: { id: account.id },
           data: { balance: currentBalance, updatedAt: getRandomDate() },
-        })
+        });
+
+        transactions.length = 0; // Clear transactions after creation
+      }
+
+      cards.push(
+        {
+          userId: user.id,
+          accountId: userAccounts.find((a) => a.type === AccountType.CHECKING)!
+            .id,
+          cardNumber: validateCardNumber(faker.finance.creditCardNumber()),
+          type: "DEBIT",
+          expiryDate: new Date("2027-12-31"),
+          cvv: faker.finance.creditCardCVV(),
+          status: "ACTIVE",
+          pinHash: faker.string.alphanumeric(64),
+          dailyLimit: getRandomAmount(10000, 50000),
+          token: faker.string.uuid(),
+          merchantCategoryLimits: {},
+          createdAt: getRandomDate(),
+          updatedAt: getRandomDate(),
+        },
+        {
+          userId: user.id,
+          accountId: userAccounts.find((a) => a.type === AccountType.SAVINGS)!
+            .id,
+          cardNumber: validateCardNumber(faker.finance.creditCardNumber()),
+          type: "CREDIT",
+          expiryDate: new Date("2028-03-31"),
+          cvv: faker.finance.creditCardCVV(),
+          status: "ACTIVE",
+          creditLimit: 100000,
+          availableCredit: 75000,
+          rewardsPoints: getRandomAmount(1000, 5000),
+          pinHash: faker.string.alphanumeric(64),
+          dailyLimit: getRandomAmount(10000, 50000),
+          token: faker.string.uuid(),
+          merchantCategoryLimits: { retail: 20000, travel: 30000 },
+          createdAt: getRandomDate(),
+          updatedAt: getRandomDate(),
+        }
       );
-    }
 
-    // Create Cards (One per account: Debit for Checking, Credit for Savings)
-    const cards = [
-      {
-        userId: user.id,
-        accountId: userAccounts.find((a) => a.type === AccountType.CHECKING)!
-          .id,
-        cardNumber: validateCardNumber(faker.finance.creditCardNumber()),
-        type: "DEBIT",
-        expiryDate: new Date("2027-12-31"),
-        cvv: faker.finance.creditCardCVV(),
-        status: "ACTIVE",
-        pinHash: faker.string.alphanumeric(64),
-        dailyLimit: getRandomAmount(1000, 5000),
-        token: faker.string.uuid(),
-        merchantCategoryLimits: {},
-        createdAt: getRandomDate(),
-        updatedAt: getRandomDate(),
-      },
-      {
-        userId: user.id,
-        accountId: userAccounts.find((a) => a.type === AccountType.SAVINGS)!.id,
-        cardNumber: validateCardNumber(faker.finance.creditCardNumber()),
-        type: "CREDIT",
-        expiryDate: new Date("2028-03-31"),
-        cvv: faker.finance.creditCardCVV(),
-        status: "ACTIVE",
-        creditLimit: 5000,
-        availableCredit: 3500,
-        rewardsPoints: getRandomAmount(100, 1000),
-        pinHash: faker.string.alphanumeric(64),
-        dailyLimit: getRandomAmount(1000, 5000),
-        token: faker.string.uuid(),
-        merchantCategoryLimits: { retail: 2000, travel: 3000 },
-        createdAt: getRandomDate(),
-        updatedAt: getRandomDate(),
-      },
-    ];
+      await tx.card.createMany({ data: cards });
+      logger.debug(`Created ${cards.length} cards for user`);
 
-    await withRetry(() => prisma.card.createMany({ data: cards }));
-    logger.debug(`Created ${cards.length} cards for user`);
-
-    // Create Bill Payments (High-end for a rich, high-working-class woman)
-    const checkingAccount = userAccounts.find(
-      (a) => a.type === AccountType.CHECKING
-    );
-    if (checkingAccount) {
-      const billPayments = [
-        {
-          accountId: checkingAccount.id,
-          userId: user.id,
-          provider: "Florida Power & Light (FPL)",
-          accountNumber: validateAccountNumber(faker.finance.accountNumber(8)),
-          amount: getRandomAmount(100, 300),
-          dueDate: addDays(getRandomDate(), 5),
-          status: "PAID",
-          paymentDate: getRandomDate(),
-          confirmationNo: faker.string.uuid(),
-          isRecurring: true,
-          recurringFreq: "MONTHLY",
-          recurringEndDate: addMonths(getRandomDate(), 12),
-          createdAt: getRandomDate(),
-          updatedAt: getRandomDate(),
-        },
-        {
-          accountId: checkingAccount.id,
-          userId: user.id,
-          provider: "T-Mobile Wireless",
-          accountNumber: validateAccountNumber(faker.finance.accountNumber(8)),
-          amount: getRandomAmount(50, 200),
-          dueDate: addDays(getRandomDate(), 5),
-          status: "PAID",
-          paymentDate: getRandomDate(),
-          confirmationNo: faker.string.uuid(),
-          isRecurring: true,
-          recurringFreq: "MONTHLY",
-          recurringEndDate: addMonths(getRandomDate(), 12),
-          createdAt: getRandomDate(),
-          updatedAt: getRandomDate(),
-        },
-        {
-          accountId: checkingAccount.id,
-          userId: user.id,
-          provider: "Comcast Xfinity",
-          accountNumber: validateAccountNumber(faker.finance.accountNumber(8)),
-          amount: getRandomAmount(80, 150),
-          dueDate: addDays(getRandomDate(), 5),
-          status: "PAID",
-          paymentDate: getRandomDate(),
-          confirmationNo: faker.string.uuid(),
-          isRecurring: true,
-          recurringFreq: "MONTHLY",
-          recurringEndDate: addMonths(getRandomDate(), 12),
-          createdAt: getRandomDate(),
-          updatedAt: getRandomDate(),
-        },
-        {
-          accountId: checkingAccount.id,
-          userId: user.id,
-          provider: "Saks Fifth Avenue",
-          accountNumber: validateAccountNumber(faker.finance.accountNumber(8)),
-          amount: getRandomAmount(1000, 5000),
-          dueDate: addDays(getRandomDate(), 5),
-          status: "PAID",
-          paymentDate: getRandomDate(),
-          confirmationNo: faker.string.uuid(),
-          isRecurring: false,
-          createdAt: getRandomDate(),
-          updatedAt: getRandomDate(),
-        },
-        {
-          accountId: checkingAccount.id,
-          userId: user.id,
-          provider: "NetJets Private Aviation",
-          accountNumber: validateAccountNumber(faker.finance.accountNumber(8)),
-          amount: getRandomAmount(10000, 50000),
-          dueDate: addDays(getRandomDate(), 5),
-          status: "PAID",
-          paymentDate: getRandomDate(),
-          confirmationNo: faker.string.uuid(),
-          isRecurring: false,
-          createdAt: getRandomDate(),
-          updatedAt: getRandomDate(),
-        },
+      const notificationTypes = [
+        "Security Alert",
+        "Account Activity",
+        "Payment Reminder",
+        "New Feature",
+        "Promotional Offer",
+        "High Balance Alert",
+        "Fraud Detection Notice",
+        "Bill Payment Confirmation",
+        "Card Transaction Alert",
+        "Account Statement Available",
       ];
+      for (let i = 0; i < config.numNotificationsPerUser; i++) {
+        notifications.push({
+          userId: user.id,
+          type: faker.helpers.arrayElement(notificationTypes),
+          message: faker.lorem.sentence({ min: 5, max: 15 }),
+          read: faker.datatype.boolean(),
+          priority: faker.helpers.arrayElement(["LOW", "MEDIUM", "HIGH"]),
+          createdAt: getCurrentMonthDate(),
+        });
+      }
 
-      const createdBills = await withRetry(() =>
-        prisma.bill.createMany({ data: billPayments, skipDuplicates: true })
-      );
-      billIds.push(
-        ...(
-          await prisma.bill.findMany({
-            where: { userId: user.id },
-            select: { id: true },
-          })
-        ).map((b) => b.id)
-      );
-      logger.debug(`Created ${createdBills.count} bill payments`);
-    }
-
-    // Create Notifications
-    const notificationTypes = [
-      "Security Alert",
-      "Account Activity",
-      "Payment Reminder",
-      "New Feature",
-      "Promotional Offer",
-      "High Balance Alert",
-      "Fraud Detection Notice",
-      "Bill Payment Confirmation",
-      "Card Transaction Alert",
-      "Account Statement Available",
-    ];
-    const notifications = Array.from(
-      { length: config.numNotificationsPerUser },
-      () => ({
-        userId: user.id,
-        type: faker.helpers.arrayElement(notificationTypes),
-        message: faker.lorem.sentence({ min: 5, max: 15 }),
-        read: faker.datatype.boolean(),
-        priority: faker.helpers.arrayElement(["LOW", "MEDIUM", "HIGH"]),
-        createdAt: getRandomDate(),
-      })
-    );
-
-    await withRetry(() =>
-      prisma.notification.createMany({ data: notifications })
-    );
-    logger.debug(`Created ${notifications.length} notifications`);
+      await tx.notification.createMany({ data: notifications });
+      logger.debug(`Created ${notifications.length} notifications`);
+    });
 
     logger.info(
       `Data population completed for user ${user.email} (ID: ${user.id})`

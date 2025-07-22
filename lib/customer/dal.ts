@@ -3,12 +3,18 @@
 import { cache } from "react";
 import { getUserSession } from "../session";
 import { prisma } from "../db";
+import { endOfMonth, startOfMonth } from "date-fns";
+import {
+  AccountType,
+  TransactionStatus,
+  TransactionType,
+} from "@prisma/client";
 
 export const getUserProfile = cache(async () => {
   const session = await getUserSession();
   if (!session) return null;
 
-  const userId = session?.userId;
+  const userId = session.userId;
 
   try {
     const profile = await prisma.user.findUnique({
@@ -20,7 +26,7 @@ export const getUserProfile = cache(async () => {
       },
     });
     return profile;
-  } catch (error) {
+  } catch (error: unknown) {
     console.log(error);
     return null;
   }
@@ -58,25 +64,70 @@ export const getRecentTransactions = cache(async () => {
         hour12: true,
       }),
       amount:
-        (txn.type === "DEPOSIT" ? "+" : "-") +
+        (txn.type === TransactionType.DEPOSIT ||
+        txn.type === TransactionType.MOBILE_DEPOSIT
+          ? "+"
+          : "-") +
         `$${txn.amount.toLocaleString("en-US", {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })}`,
       icon:
-        txn.type === "DEPOSIT"
+        txn.type === TransactionType.DEPOSIT ||
+        txn.type === TransactionType.MOBILE_DEPOSIT
           ? "📱"
-          : txn.type === "TRANSFER_EXTERNAL"
+          : txn.type === TransactionType.TRANSFER_US_BANK ||
+            txn.type === TransactionType.TRANSFER_INTERNATIONAL ||
+            txn.type === TransactionType.TRANSFER_FINTRUST ||
+            txn.type === TransactionType.TRANSFER_INTERNAL
           ? "↔️"
           : "💳",
     }));
-  } catch (error) {
+  } catch (error: unknown) {
     console.log(error);
     return null;
   }
 });
 
-export const getAllAccounts = cache(async () => {
+export const getAllAccounts = async () => {
+  const session = await getUserSession();
+  if (!session) return [];
+
+  try {
+    const accounts = await prisma.account.findMany({
+      where: { userId: session.userId },
+      select: {
+        id: true,
+        balance: true,
+        accountNumber: true,
+        type: true,
+        status: true,
+        user: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+    return accounts.map((account) => ({
+      id: account.id,
+      balance: account.balance,
+      accountNumber: account.accountNumber,
+      holder: `${account.user.firstName} ${account.user.lastName}`,
+      type:
+        account.type === AccountType.CHECKING
+          ? "Personal Checking"
+          : "Personal Savings",
+      status: account.status,
+    }));
+  } catch (error: unknown) {
+    console.error("Error fetching accounts:", error);
+    return [];
+  }
+};
+
+export const getAllAccountDetails = cache(async () => {
   const session = await getUserSession();
   if (!session) return null;
 
@@ -107,10 +158,12 @@ export const getAllAccounts = cache(async () => {
       routingNumber: account.routingNumber,
       holder: `${account.user.firstName} ${account.user.lastName}`,
       type:
-        account.type === "CHECKING" ? "Personal Checking" : "Personal Savings",
+        account.type === AccountType.CHECKING
+          ? "Personal Checking"
+          : "Personal Savings",
       status: account.status,
     }));
-  } catch (error) {
+  } catch (error: unknown) {
     console.log(error);
     return null;
   }
@@ -142,7 +195,7 @@ export const getNotifications = cache(async () => {
     });
 
     return notifications;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error fetching notifications:", error);
     return [];
   }
@@ -152,7 +205,7 @@ export const getUserBeneficiaries = cache(async () => {
   const session = await getUserSession();
   if (!session) return null;
 
-  const userId = session?.userId;
+  const userId = session.userId;
 
   try {
     const beneficiaries = await prisma.user.findUnique({
@@ -170,8 +223,74 @@ export const getUserBeneficiaries = cache(async () => {
       },
     });
     return beneficiaries;
-  } catch (error) {
+  } catch (error: unknown) {
     console.log(error);
     return null;
+  }
+});
+
+export const getMonthlySummary = cache(async () => {
+  const session = await getUserSession();
+  if (!session)
+    return { income: 0, incomeCount: 0, outgoing: 0, outgoingCount: 0 };
+
+  const userId = session.userId;
+  const start = startOfMonth(new Date());
+  const end = endOfMonth(new Date());
+
+  try {
+    const transactions = await prisma.transaction.findMany({
+      where: {
+        userId,
+        status: TransactionStatus.COMPLETED,
+        date: { gte: start, lte: end },
+      },
+      select: {
+        amount: true,
+        type: true,
+      },
+    });
+
+    const income = transactions
+      .filter(
+        (txn) =>
+          txn.type === TransactionType.DEPOSIT ||
+          txn.type === TransactionType.MOBILE_DEPOSIT
+      )
+      .reduce((sum, txn) => sum + txn.amount, 0);
+    const incomeCount = transactions.filter(
+      (txn) =>
+        txn.type === TransactionType.DEPOSIT ||
+        txn.type === TransactionType.MOBILE_DEPOSIT
+    ).length;
+
+    const outgoing = transactions
+      .filter(
+        (txn) =>
+          txn.type === TransactionType.BILL_PAYMENT ||
+          txn.type === TransactionType.WITHDRAWAL ||
+          txn.type === TransactionType.TRANSFER_US_BANK ||
+          txn.type === TransactionType.TRANSFER_INTERNATIONAL ||
+          txn.type === TransactionType.TRANSFER_FINTRUST
+      )
+      .reduce((sum, txn) => sum + txn.amount, 0);
+    const outgoingCount = transactions.filter(
+      (txn) =>
+        txn.type === TransactionType.BILL_PAYMENT ||
+        txn.type === TransactionType.WITHDRAWAL ||
+        txn.type === TransactionType.TRANSFER_US_BANK ||
+        txn.type === TransactionType.TRANSFER_INTERNATIONAL ||
+        txn.type === TransactionType.TRANSFER_FINTRUST
+    ).length;
+
+    return {
+      income,
+      incomeCount,
+      outgoing,
+      outgoingCount,
+    };
+  } catch (error: unknown) {
+    console.error("Error fetching monthly summary:", error);
+    return { income: 0, incomeCount: 0, outgoing: 0, outgoingCount: 0 };
   }
 });

@@ -14,11 +14,19 @@ interface Account {
 }
 
 interface AccountOverviewProps {
-  allAccounts: Account[] | null;
+  allAccountDetails: Account[] | null;
 }
 
-const AccountOverview: FC<AccountOverviewProps> = ({ allAccounts }) => {
-  const [selectedAccountIndex, setSelectedAccountIndex] = useState(0);
+const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
+  const [selectedAccountIndex, setSelectedAccountIndex] = useState(() => {
+    if (allAccountDetails && allAccountDetails.length > 0) {
+      const checkingIndex = allAccountDetails.findIndex((account) =>
+        account.type.includes("Checking")
+      );
+      return checkingIndex !== -1 ? checkingIndex : 0;
+    }
+    return 0;
+  });
 
   const copyText = (text: string) => {
     navigator.clipboard
@@ -27,8 +35,8 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccounts }) => {
   };
 
   const account =
-    allAccounts && allAccounts.length > 0
-      ? allAccounts[selectedAccountIndex]
+    allAccountDetails && allAccountDetails.length > 0
+      ? allAccountDetails[selectedAccountIndex]
       : {
           balance: 0,
           accountNumber: "N/A",
@@ -39,9 +47,9 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccounts }) => {
         };
 
   const handleToggleAccount = () => {
-    if (allAccounts && allAccounts.length > 1) {
+    if (allAccountDetails && allAccountDetails.length > 1) {
       setSelectedAccountIndex((prevIndex) =>
-        prevIndex === allAccounts.length - 1 ? 0 : prevIndex + 1
+        prevIndex === allAccountDetails.length - 1 ? 0 : prevIndex + 1
       );
     }
   };
@@ -68,7 +76,7 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccounts }) => {
               className="bg-primary-500/90 hover:bg-primary-600 cursor-pointer backdrop-blur-sm rounded-xl p-3 transition-colors duration-200"
               onClick={handleToggleAccount}
               aria-label={
-                allAccounts && allAccounts.length > 1
+                allAccountDetails && allAccountDetails.length > 1
                   ? `Switch to ${
                       account.type.includes("Checking")
                         ? "Savings Account"
@@ -76,7 +84,7 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccounts }) => {
                     }`
                   : "No additional accounts to switch to"
               }
-              disabled={!(allAccounts && allAccounts.length > 1)}
+              disabled={!(allAccountDetails && allAccountDetails.length > 1)}
             >
               <svg
                 className="w-6 h-6 text-white"

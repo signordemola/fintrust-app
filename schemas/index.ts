@@ -77,11 +77,6 @@ export const LoginSchema = z.object({
   rememberMe: z.boolean().optional(),
 });
 
-export const PasskeySchema = z.object({
-  email: z.string().email(),
-  passkey: z.string().length(6, "Passkey must be 6 digits"),
-});
-
 export const sessionSchema = z.object({
   userId: z.string(),
   role: z.enum(

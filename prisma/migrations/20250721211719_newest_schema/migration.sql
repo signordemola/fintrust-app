@@ -2,6 +2,9 @@
 CREATE TYPE "TransactionStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REVERSED', 'PROCESSING');
 
 -- CreateEnum
+CREATE TYPE "TransactionType" AS ENUM ('TRANSFER_INTERNAL', 'TRANSFER_FINTRUST', 'TRANSFER_US_BANK', 'TRANSFER_INTERNATIONAL', 'BILL_PAYMENT', 'MOBILE_DEPOSIT', 'DEPOSIT', 'WITHDRAWAL');
+
+-- CreateEnum
 CREATE TYPE "AccountType" AS ENUM ('CHECKING', 'SAVINGS');
 
 -- CreateEnum
@@ -12,6 +15,9 @@ CREATE TYPE "ExternalAccountType" AS ENUM ('ACH', 'WIRE', 'SWIFT', 'OTHER');
 
 -- CreateEnum
 CREATE TYPE "UserRoleEnum" AS ENUM ('CUSTOMER', 'ADMIN');
+
+-- CreateEnum
+CREATE TYPE "BeneficiaryType" AS ENUM ('BANK_ACCOUNT', 'UTILITY');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -26,6 +32,7 @@ CREATE TABLE "User" (
     "cityState" TEXT NOT NULL,
     "zipCode" TEXT NOT NULL,
     "country" TEXT NOT NULL,
+    "username" TEXT,
     "emailVerified" BOOLEAN NOT NULL DEFAULT false,
     "isActive" BOOLEAN NOT NULL DEFAULT false,
     "isAdmin" BOOLEAN NOT NULL DEFAULT false,
@@ -34,6 +41,7 @@ CREATE TABLE "User" (
     "isSubscribed" BOOLEAN NOT NULL DEFAULT false,
     "twoFactorEnabled" BOOLEAN NOT NULL DEFAULT false,
     "transactionPin" TEXT,
+    "isTransferBlocked" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -59,12 +67,26 @@ CREATE TABLE "Account" (
 );
 
 -- CreateTable
+CREATE TABLE "Beneficiary" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "type" "BeneficiaryType" NOT NULL,
+    "accountNumber" TEXT,
+    "utilityId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Beneficiary_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Transaction" (
     "id" TEXT NOT NULL,
     "accountId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
-    "type" TEXT NOT NULL,
+    "type" "TransactionType" NOT NULL,
     "description" TEXT NOT NULL,
     "reference" TEXT,
     "status" "TransactionStatus" NOT NULL,
@@ -219,6 +241,9 @@ CREATE INDEX "Account_accountNumber_idx" ON "Account"("accountNumber");
 CREATE INDEX "Account_userId_idx" ON "Account"("userId");
 
 -- CreateIndex
+CREATE INDEX "Beneficiary_userId_idx" ON "Beneficiary"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Transaction_reference_key" ON "Transaction"("reference");
 
 -- CreateIndex
@@ -310,6 +335,9 @@ CREATE INDEX "AuditLog_createdAt_idx" ON "AuditLog"("createdAt");
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Beneficiary" ADD CONSTRAINT "Beneficiary_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

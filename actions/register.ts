@@ -1,8 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/db";
-import { sendPasskeyEmail } from "@/lib/mail";
-import { generatePassKey, hashPassword } from "@/lib/password";
+import { hashPassword } from "@/lib/password";
 import { RegisterSchema } from "@/schemas";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import z from "zod";
@@ -43,7 +42,7 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
 
     const hashedPassword = await hashPassword(password);
 
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         firstName,
         lastName,
@@ -58,22 +57,9 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
       },
     });
 
-    const passkey = generatePassKey();
-
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passkey: passkey,
-      },
-    });
-
-    console.log(passkey);
-
-    await sendPasskeyEmail(user.email, passkey);
-
     return {
       success: true,
-      redirect: `/verify-passkey?email=${encodeURIComponent(user.email)}`,
+      redirect: `/sign-in`,
     };
   } catch (error) {
     console.error("Registration error:", error);
