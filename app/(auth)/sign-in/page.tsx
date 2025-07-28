@@ -6,7 +6,7 @@ const SignInPage = () => {
   const year = new Date().getFullYear();
   return (
     <main className="min-h-screen flex flex-col md:flex-row">
-      <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-primary-500 to-accent-600 relative overflow-hidden">
+      <div className="hidden md:block md:w-1/2 bg-gradient-to-br from-primary-600 to-accent-600 relative overflow-hidden">
         <div className="relative h-full w-full">
           <div className="absolute inset-0 flex items-center justify-center">
             <svg

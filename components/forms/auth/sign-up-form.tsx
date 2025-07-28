@@ -62,7 +62,7 @@ const SignUpForm = () => {
   };
 
   return (
-    <div className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+    <div className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-8 text-foreground">
       <div className="w-full max-w-4xl rounded-xl border bg-background p-10 shadow-xl">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -300,7 +300,7 @@ const SignUpForm = () => {
               <p className="text-sm text-destructive font-medium">{error}</p>
             )}
 
-            <Button type="submit" disabled={isPending} className="w-full">
+            <Button type="submit" disabled={isPending} className="w-full bg-gradient-to-br from-primary-600 to-accent-600">
               {isPending ? (
                 <span className="animate-pulse">Submitting...</span>
               ) : (

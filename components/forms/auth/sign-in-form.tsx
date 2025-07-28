@@ -56,13 +56,7 @@ export const SignInForm = () => {
   return (
     <div className="flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       <div className="w-full max-w-md p-8 rounded-xl bg-card border">
-        <div className="flex justify-center md:justify-start">
-          <Link href={`/`}>
-            <h1 className="h-14 md:h-16 lg:h-20 w-auto max-w-[320px] transition-all duration-300 font-bold text-4xl">
-              FinTrust
-            </h1>
-          </Link>
-        </div>
+       
         <h2 className="mt-6 text-3xl font-serif font-bold">Welcome Back</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Sign in to access your account
@@ -150,7 +144,7 @@ export const SignInForm = () => {
                 </Link>
               </div>
 
-              <Button type="submit" disabled={isPending} className="w-full">
+              <Button type="submit" disabled={isPending} className="w-full bg-gradient-to-br from-primary-600 to-accent-600">
                 {isPending ? (
                   <svg
                     className="animate-spin h-5 w-5 text-white"
