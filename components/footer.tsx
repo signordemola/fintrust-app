@@ -96,15 +96,15 @@ const Footer = () => {
                 <li>
                   <Link
                     className="text-muted-foreground hover:text-primary-500 transition-colors"
-                    href="/locations"
+                    href="/contact"
                   >
-                    Locations
+                    Contact Us
                   </Link>
                 </li>
                 <li>
                   <Link
                     className="text-muted-foreground hover:text-primary-500 transition-colors"
-                    href="/careers"
+                    href="#"
                   >
                     Careers
                   </Link>
@@ -112,7 +112,7 @@ const Footer = () => {
                 <li>
                   <Link
                     className="text-muted-foreground hover:text-primary-500 transition-colors"
-                    href="/security"
+                    href="#"
                   >
                     Security
                   </Link>
@@ -149,7 +149,7 @@ const Footer = () => {
                 </li>
                 <li>
                   <Link
-                    href="/locations"
+                    href="#"
                     className="flex items-center text-muted-foreground hover:text-primary-500 transition-colors"
                   >
                     <svg
@@ -230,19 +230,19 @@ const Footer = () => {
             <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm text-muted-foreground">
               <Link
                 className="hover:text-primary-500 transition-colors"
-                href="/privacy"
+                href="#"
               >
                 Privacy Policy
               </Link>
               <Link
                 className="hover:text-primary-500 transition-colors"
-                href="/terms"
+                href="#"
               >
                 Terms of Service
               </Link>
               <Link
                 className="hover:text-primary-500 transition-colors"
-                href="/accessibility"
+                href="#"
               >
                 Accessibility
               </Link>

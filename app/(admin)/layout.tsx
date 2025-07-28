@@ -1,4 +1,4 @@
-import AdminNavbar from "@/components/admin-navbar";
+import AdminNavbar from "@/components/admin/admin-navbar";
 import { getUserProfile } from "@/lib/customer/dal";
 import { getUserSession } from "@/lib/session";
 import { UserRoleEnum } from "@prisma/client";

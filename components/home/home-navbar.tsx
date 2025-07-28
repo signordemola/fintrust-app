@@ -105,7 +105,7 @@ const HomeNavbar = () => {
       </div>
 
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 bg-primary-900 bg-opacity-95 flex flex-col items-center justify-center space-y-8 z-[999] animate-fade-in">
+        <div className="md:hidden fixed inset-0 bg-primary-900 bg-opacity-95 flex flex-col items-center justify-center space-y-8 z-[10] animate-fade-in">
           <Link
             href="/"
             className="text-text-white text-2xl hover:text-primary-500"

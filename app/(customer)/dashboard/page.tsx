@@ -1,10 +1,10 @@
-import AccountOverview from "@/components/account-overview";
-import Header from "@/components/header";
-import MonthlySummary from "@/components/monthly-summary";
-import NavBar from "@/components/navbar";
-import QuickActions from "@/components/quick-actions";
-import RecentTransactions from "@/components/recent-transactions";
-import TransferSection from "@/components/transfer-section";
+import AccountOverview from "@/components/customer/account-overview";
+import CustomerNavBar from "@/components/customer/customer-navbar";
+import Header from "@/components/customer/header";
+import MonthlySummary from "@/components/customer/monthly-summary";
+import QuickActions from "@/components/customer/quick-actions";
+import RecentTransactions from "@/components/customer/recent-transactions";
+import TransferSection from "@/components/customer/transfer-section";
 import {
   getAllAccountDetails,
   getAllAccounts,
@@ -51,7 +51,7 @@ const DashboardPage = async () => {
 
   return (
     <section>
-      <NavBar
+      <CustomerNavBar
         profile={profile}
         initialNotifications={notifications}
         userBeneficiaries={beneficiaries}
