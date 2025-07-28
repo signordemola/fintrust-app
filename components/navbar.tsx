@@ -16,6 +16,7 @@ import { logout } from "@/actions/logout";
 import { formatDistanceToNowStrict } from "date-fns";
 import AccountManagementModal from "./modals/account-management";
 import SecuritySettingsModal from "./modals/security-settings";
+import Image from "next/image";
 
 interface Notification {
   id: string;
@@ -96,7 +97,18 @@ const NavBar = ({
         <div className="flex justify-between h-24 md:h-28">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center px-3">
-              <Link href="/">Home</Link>
+              <Link href="/" className="flex items-center space-x-2">
+                <Image
+                  src="/images/logo-50.png"
+                  alt="FinTrust Credit Union Logo"
+                  width={30}
+                  height={30}
+                  className="rounded-full"
+                />
+                <span className="text-white text-xl font-bold uppercase -ml-1 font-sans">
+                  Fintrustcu
+                </span>
+              </Link>
             </div>
             <div className="hidden md:ml-12 md:flex md:items-center md:space-x-1">
               {navItems.map((item) => (
@@ -210,7 +222,7 @@ const NavBar = ({
                     {firstName[0]}
                   </div>
                   <div className="hidden md:block text-left">
-                    <p className="text-sm font-medium lowercase">
+                    <p className="text-sm font-medium capitalize">
                       {username || "new customer"}
                     </p>
                     <p className="text-xs text-gray-500">Personal Account</p>

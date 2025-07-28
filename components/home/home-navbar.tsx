@@ -25,13 +25,13 @@ const HomeNavbar = () => {
           onClick={closeMobileMenu}
         >
           <Image
-            src="https://fintok.bravisthemes.com/wp-content/uploads/2025/02/logo.webp"
+            src="/images/logo-50.png"
             alt="FinTrust Credit Union Logo"
-            width={40}
-            height={40}
+            width={30}
+            height={30}
             className="rounded-full"
           />
-          <span className="text-text-white text-xl font-bold uppercase">
+          <span className="text-white text-xl font-bold uppercase -ml-1 font-sans">
             Fintrustcu
           </span>
         </Link>

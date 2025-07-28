@@ -2,27 +2,30 @@ import Link from "next/link";
 import Image from "next/image";
 
 const Footer = () => {
+  const year = new Date().getFullYear();
+
   return (
     <footer className="bg-background/95 relative">
       <div className="absolute inset-0 bg-pattern-dots opacity-5"></div>
       <div className="relative container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Column 1: Logo and Description */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           <div className="space-y-6">
             <Link href="/" className="inline-block">
               <div className="flex items-center">
                 <Image
-                  src="https://fintok.bravisthemes.com/wp-content/uploads/2025/02/logo.webp" // Using the logo from HomeNavbar for consistency
+                  src="/images/logo-100.png"
                   alt="FinTrust Credit Union"
-                  width={80} // Adjusted width for better visibility in footer
-                  height={80} // Adjusted height for better visibility in footer
+                  width={60}
+                  height={60}
                   className="h-14 md:h-16 lg:h-20 w-auto max-w-[320px] transition-all duration-300"
                 />
               </div>
             </Link>
             <p className="text-muted-foreground text-sm">
-              Providing trusted financial services and personalized solutions
-              since 1973.
+              <span className="mb-2 block">
+                Providing trusted financial services
+              </span>
+              <span>& personalized solutions since 1973.</span>
             </p>
             <div className="flex space-x-4">
               <a
@@ -76,142 +79,105 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Column 2: Quick Links */}
-          <div>
-            <h3 className="text-foreground font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link
-                  className="text-muted-foreground hover:text-primary-500 transition-colors"
-                  href="/about"
-                >
-                  About Us
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-muted-foreground hover:text-primary-500 transition-colors"
-                  href="/locations"
-                >
-                  Locations
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-muted-foreground hover:text-primary-500 transition-colors"
-                  href="/careers"
-                >
-                  Careers
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-muted-foreground hover:text-primary-500 transition-colors"
-                  href="/security"
-                >
-                  Security
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 3: Products */}
-          <div>
-            <h3 className="text-foreground font-semibold mb-4">Products</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link
-                  className="text-muted-foreground hover:text-primary-500 transition-colors"
-                  href="/accounts/checking"
-                >
-                  Checking
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-muted-foreground hover:text-primary-500 transition-colors"
-                  href="/accounts/savings"
-                >
-                  Savings
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-muted-foreground hover:text-primary-500 transition-colors"
-                  href="/credit-cards"
-                >
-                  Credit Cards
-                </Link>
-              </li>
-              <li>
-                <Link
-                  className="text-muted-foreground hover:text-primary-500 transition-colors"
-                  href="/mortgages"
-                >
-                  Mortgages
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Column 4: Contact Us */}
-          <div>
-            <h3 className="text-foreground font-semibold mb-4">Contact Us</h3>
-            <ul className="space-y-3">
-              <li>
-                <a
-                  href="mailto:support@fintrustcu.com"
-                  className="flex items-center text-muted-foreground hover:text-primary-500 transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                    data-slot="icon"
-                    className="h-5 w-5 mr-2"
+          <div className="flex justify-between">
+            <div>
+              <h3 className="text-foreground font-semibold mb-4">
+                Quick Links
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    className="text-muted-foreground hover:text-primary-500 transition-colors"
+                    href="/about"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
-                    ></path>
-                  </svg>
-                  support@fintrustcu.com
-                </a>
-              </li>
-              <li>
-                <Link
-                  href="/locations"
-                  className="flex items-center text-muted-foreground hover:text-primary-500 transition-colors"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                    data-slot="icon"
-                    className="h-5 w-5 mr-2"
+                    About Us
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    className="text-muted-foreground hover:text-primary-500 transition-colors"
+                    href="/locations"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
-                    ></path>
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
-                    ></path>
-                  </svg>
-                  Find a Branch
-                </Link>
-              </li>
-            </ul>
+                    Locations
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    className="text-muted-foreground hover:text-primary-500 transition-colors"
+                    href="/careers"
+                  >
+                    Careers
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    className="text-muted-foreground hover:text-primary-500 transition-colors"
+                    href="/security"
+                  >
+                    Security
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-foreground font-semibold mb-4">Contact Us</h3>
+              <ul className="space-y-3">
+                <li>
+                  <a
+                    href="mailto:support@fintrustcu.com"
+                    className="flex items-center text-muted-foreground hover:text-primary-500 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                      data-slot="icon"
+                      className="h-5 w-5 mr-2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+                      ></path>
+                    </svg>
+                    support@fintrustcu.com
+                  </a>
+                </li>
+                <li>
+                  <Link
+                    href="/locations"
+                    className="flex items-center text-muted-foreground hover:text-primary-500 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      aria-hidden="true"
+                      data-slot="icon"
+                      className="h-5 w-5 mr-2"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                      ></path>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z"
+                      ></path>
+                    </svg>
+                    Find a Branch
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -280,13 +246,9 @@ const Footer = () => {
               >
                 Accessibility
               </Link>
-              <div>
-                <span>Routing Number: </span>
-                <span className="font-mono">214478789</span>
-              </div>
             </div>
             <div className="text-sm text-muted-foreground">
-              © 2025 FinTrust Credit Union
+              © {year} FinTrust Credit Union
             </div>
           </div>
         </div>

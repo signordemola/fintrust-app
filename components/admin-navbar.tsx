@@ -13,6 +13,7 @@ import {
 import { Button } from "./ui/button";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { logout } from "@/actions/logout";
+import Image from "next/image";
 
 interface AdminNavbarProps {
   profile: {
@@ -51,7 +52,18 @@ const AdminNavbar = ({
         <div className="flex justify-between h-24 md:h-28">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center px-3">
-              <Link href="/">Home</Link>
+              <Link href="/" className="flex items-center space-x-2">
+                <Image
+                  src="/images/logo-50.png"
+                  alt="FinTrust Credit Union Logo"
+                  width={30}
+                  height={30}
+                  className="rounded-full"
+                />
+                <span className="text-white text-xl font-bold uppercase -ml-1 font-sans">
+                  Fintrustcu
+                </span>
+              </Link>
             </div>
           </div>
           <div className="flex items-center space-x-3">
