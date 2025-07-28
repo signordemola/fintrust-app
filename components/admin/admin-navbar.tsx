@@ -9,8 +9,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Button } from "./ui/button";
+} from ".././ui/dropdown-menu";
+import { Button } from ".././ui/button";
 import { ChevronDown, LogOut, User } from "lucide-react";
 import { logout } from "@/actions/logout";
 import Image from "next/image";

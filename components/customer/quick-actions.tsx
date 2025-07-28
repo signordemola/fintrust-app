@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import BillPayModal from "./forms/quick-actions-modal/bill-pay";
-import MobileDepositModal from "./forms/quick-actions-modal/mobile-deposit";
-import CardsModal from "./forms/quick-actions-modal/cards";
-import StatementsModal from "./forms/quick-actions-modal/statements";
-import ZelleModal from "./forms/quick-actions-modal/zelle";
-import RewardsModal from "./forms/quick-actions-modal/rewards";
+import BillPayModal from ".././forms/quick-actions-modal/bill-pay";
+import MobileDepositModal from ".././forms/quick-actions-modal/mobile-deposit";
+import CardsModal from ".././forms/quick-actions-modal/cards";
+import StatementsModal from ".././forms/quick-actions-modal/statements";
+import ZelleModal from ".././forms/quick-actions-modal/zelle";
+import RewardsModal from ".././forms/quick-actions-modal/rewards";
 
 const QuickActions = () => {
   const [openDialog, setOpenDialog] = useState<string | null>(null);
