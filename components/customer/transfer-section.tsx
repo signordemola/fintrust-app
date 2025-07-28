@@ -1,10 +1,10 @@
 "use client";
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
-import BetweenAccountsForm from "./forms/transaction-form/between-accounts";
-import FinTrustUserForm from "./forms/transaction-form/fintrust-user";
-import USBankForm from "./forms/transaction-form/usbank-form";
-import InternationalForm from "./forms/transaction-form/international-form";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from ".././ui/tabs";
+import BetweenAccountsForm from ".././forms/transaction-form/between-accounts";
+import FinTrustUserForm from ".././forms/transaction-form/fintrust-user";
+import USBankForm from ".././forms/transaction-form/usbank-form";
+import InternationalForm from ".././forms/transaction-form/international-form";
 
 interface TransferSectionProps {
   allAccounts: {
