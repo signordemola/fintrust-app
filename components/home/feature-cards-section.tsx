@@ -7,7 +7,7 @@ const FeatureCardsSection = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 -translate-y-8">
           {/* Card 1: Online Banking */}
           <Link
-            href="/login"
+            href="/sign-in"
             className="bg-text-white rounded-xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
           >
             <div className="flex items-start space-x-4">
@@ -40,7 +40,7 @@ const FeatureCardsSection = () => {
 
           {/* Card 2: Loan Calculator */}
           <Link
-            href="/calculators"
+            href="/services"
             className="bg-text-white rounded-xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 group"
           >
             <div className="flex items-start space-x-4">

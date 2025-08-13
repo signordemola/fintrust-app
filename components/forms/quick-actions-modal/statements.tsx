@@ -1,6 +1,11 @@
-'use client';
+"use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog";
 
 interface StatementsModalProps {
   isOpen: boolean;
@@ -20,7 +25,9 @@ const StatementsModal = ({ isOpen, onClose }: StatementsModalProps) => {
           <div>
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
               <p className="text-sm text-yellow-800">
-                Statements are available from March 2024 onwards. For older statements, please contact our support team at 1-800-FINTRUST or email support@fintrust.com
+                Statements are available from March 2024 onwards. For older
+                statements, please contact our support team at 1-800-FINTRUST or
+                email support@fintrustcu.com
               </p>
             </div>
             <form className="space-y-6">
@@ -69,7 +76,9 @@ const StatementsModal = ({ isOpen, onClose }: StatementsModalProps) => {
                 Download Statement
               </button>
               <div className="mt-6 bg-gray-50 rounded-xl p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Recent Statements</h3>
+                <h3 className="text-sm font-medium text-gray-900 mb-3">
+                  Recent Statements
+                </h3>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-3 bg-white rounded-lg hover:bg-primary-50 transition-colors duration-200 cursor-pointer group">
                     <div className="flex items-center">
@@ -83,7 +92,9 @@ const StatementsModal = ({ isOpen, onClose }: StatementsModalProps) => {
                   <div className="flex items-center justify-between p-3 bg-white rounded-lg hover:bg-primary-50 transition-colors duration-200 cursor-pointer group">
                     <div className="flex items-center">
                       <span className="text-xl mr-3">📄</span>
-                      <span className="text-sm text-gray-900">February 2025</span>
+                      <span className="text-sm text-gray-900">
+                        February 2025
+                      </span>
                     </div>
                     <button className="text-primary-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       Download →
@@ -92,7 +103,9 @@ const StatementsModal = ({ isOpen, onClose }: StatementsModalProps) => {
                   <div className="flex items-center justify-between p-3 bg-white rounded-lg hover:bg-primary-50 transition-colors duration-200 cursor-pointer group">
                     <div className="flex items-center">
                       <span className="text-xl mr-3">📄</span>
-                      <span className="text-sm text-gray-900">January 2025</span>
+                      <span className="text-sm text-gray-900">
+                        January 2025
+                      </span>
                     </div>
                     <button className="text-primary-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                       Download →
@@ -101,7 +114,8 @@ const StatementsModal = ({ isOpen, onClose }: StatementsModalProps) => {
                 </div>
               </div>
               <p className="text-sm text-gray-500 mt-4">
-                Note: Statements are generated as PDF files and will be sent to your registered email address.
+                Note: Statements are generated as PDF files and will be sent to
+                your registered email address.
               </p>
             </form>
           </div>

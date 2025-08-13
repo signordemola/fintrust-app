@@ -216,7 +216,7 @@ export const USBankForm = ({ allAccounts }: USBankFormProps) => {
                   <p className="font-medium text-gray-900 mb-1">
                     Contact Support
                   </p>
-                  <p>📧 support@fintrust.com</p>
+                  <p>📧 support@fintrustcu.com</p>
                   <p>🕒 Monday - Friday: 8AM - 8PM EST</p>
                 </div>
                 <Button
