@@ -4,12 +4,18 @@ import { formatAccountNumber } from "@/lib/utils";
 import { FC, useState } from "react";
 import { toast } from "sonner";
 
+enum AccountType {
+  CHECKING = "Checking Account",
+  SAVINGS = "Savings Account",
+  COMPANY = "Company Account",
+}
+
 interface Account {
   balance: number;
   accountNumber: string;
   routingNumber: string;
   holder: string;
-  type: string;
+  type: AccountType;
   status: string;
 }
 
@@ -18,10 +24,11 @@ interface AccountOverviewProps {
 }
 
 const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
+  console.log("All Account Details: ", allAccountDetails);
   const [selectedAccountIndex, setSelectedAccountIndex] = useState(() => {
     if (allAccountDetails && allAccountDetails.length > 0) {
-      const checkingIndex = allAccountDetails.findIndex((account) =>
-        account.type.includes("Checking")
+      const checkingIndex = allAccountDetails.findIndex(
+        (account) => account.type === AccountType.CHECKING
       );
       return checkingIndex !== -1 ? checkingIndex : 0;
     }
@@ -42,7 +49,7 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
           accountNumber: "N/A",
           routingNumber: "N/A",
           holder: "Unknown",
-          type: "No Account",
+          type: AccountType.CHECKING,
           status: "Inactive",
         };
 
@@ -54,6 +61,15 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
     }
   };
 
+  const nextAccountType =
+    allAccountDetails && allAccountDetails.length > 1
+      ? allAccountDetails[
+          selectedAccountIndex === allAccountDetails.length - 1
+            ? 0
+            : selectedAccountIndex + 1
+        ].type
+      : "No additional accounts";
+
   return (
     <div className="mb-8">
       <div className="bg-white rounded-2xl p-8 shadow-sm">
@@ -64,26 +80,20 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                {account.type.includes("Checking")
-                  ? "Checking Account"
-                  : "Savings Account"}
+                {account.type}
               </h2>
-              <p className="text-sm text-gray-500">Personal Banking</p>
+              <p className="text-sm text-gray-500">
+                {account.type === AccountType.COMPANY
+                  ? "Business Banking"
+                  : "Personal Banking"}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-3">
             <button
               className="bg-primary-500/90 hover:bg-primary-600 cursor-pointer backdrop-blur-sm rounded-xl p-3 transition-colors duration-200"
               onClick={handleToggleAccount}
-              aria-label={
-                allAccountDetails && allAccountDetails.length > 1
-                  ? `Switch to ${
-                      account.type.includes("Checking")
-                        ? "Savings Account"
-                        : "Checking Account"
-                    }`
-                  : "No additional accounts to switch to"
-              }
+              aria-label={`Switch to ${nextAccountType}`}
               disabled={!(allAccountDetails && allAccountDetails.length > 1)}
             >
               <svg

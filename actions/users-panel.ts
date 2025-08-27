@@ -75,7 +75,15 @@ export async function blockUserTransfer(userId: string) {
   }
 }
 
-export async function runUserScript(userId: string, scriptType: string) {
+interface PopulateDataOptions {
+  accountTypes: string[];
+}
+
+export async function runUserScript(
+  userId: string,
+  scriptType: string,
+  options?: PopulateDataOptions
+) {
   try {
     if (!(await verifyAdmin())) {
       return { error: "Admin privileges required" };
@@ -84,7 +92,7 @@ export async function runUserScript(userId: string, scriptType: string) {
     let result;
     switch (scriptType) {
       case "populateData":
-        result = await populateUserData(userId);
+        result = await populateUserData(userId, options);
         break;
       case "resetData":
         result = await resetUserData(userId);

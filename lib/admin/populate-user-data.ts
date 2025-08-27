@@ -129,13 +129,20 @@ const specificTransactions = [
   },
 ];
 
+interface PopulateDataOptions {
+  accountTypes?: string[];
+}
+
 export async function populateUserData(
-  identifier: string
+  identifier: string,
+  options?: PopulateDataOptions
 ): Promise<{ message: string; userId?: string }> {
   const prisma = new PrismaClient({
     log: ["query", "info", "warn"],
     transactionOptions: { timeout: 30000 },
   });
+
+  const selectedAccountTypes = options?.accountTypes || ["CHECKING", "SAVINGS"];
 
   try {
     logger.info(`Starting data population for user: ${identifier}`);
@@ -179,10 +186,19 @@ export async function populateUserData(
       accountNumber: string;
       balance: number;
     }[] = [];
-    const accountTypes = [
-      { type: AccountType.CHECKING, targetBalance: 719725 },
-      { type: AccountType.SAVINGS, targetBalance: 5704583 },
-    ];
+
+    const accountTypeConfigs = selectedAccountTypes.map((type) => {
+      switch (type) {
+        case "CHECKING":
+          return { type: AccountType.CHECKING, targetBalance: 719720 };
+        case "SAVINGS":
+          return { type: AccountType.SAVINGS, targetBalance: 2500000 };
+        case "COMPANY":
+          return { type: AccountType.COMPANY, targetBalance: 2500000 };
+        default:
+          throw new Error(`Invalid account type: ${type}`);
+      }
+    });
 
     const billIds: string[] = [];
     const transactions: Prisma.TransactionCreateManyInput[] = [];
@@ -190,7 +206,8 @@ export async function populateUserData(
     const notifications: Prisma.NotificationCreateManyInput[] = [];
 
     await prisma.$transaction(async (tx) => {
-      for (const acc of accountTypes) {
+      for (const acc of accountTypeConfigs) {
+        console.log("Account Type:", acc);
         const account = await tx.account.create({
           data: {
             userId: user.id,
@@ -206,6 +223,12 @@ export async function populateUserData(
                 ? faker.number.float({
                     min: 0.01,
                     max: 0.05,
+                    fractionDigits: 3,
+                  })
+                : acc.type === AccountType.COMPANY
+                ? faker.number.float({
+                    min: 0.005,
+                    max: 0.03,
                     fractionDigits: 3,
                   })
                 : null,
@@ -497,45 +520,52 @@ export async function populateUserData(
         transactions.length = 0; // Clear transactions after creation
       }
 
-      cards.push(
-        {
+      for (const account of userAccounts) {
+        const cardData = {
           userId: user.id,
-          accountId: userAccounts.find((a) => a.type === AccountType.CHECKING)!
-            .id,
+          accountId: account.id,
           cardNumber: validateCardNumber(faker.finance.creditCardNumber()),
-          type: "DEBIT",
-          expiryDate: new Date("2027-12-31"),
-          cvv: faker.finance.creditCardCVV(),
           status: "ACTIVE",
+          cvv: faker.finance.creditCardCVV(),
           pinHash: faker.string.alphanumeric(64),
           dailyLimit: getRandomAmount(10000, 50000),
           token: faker.string.uuid(),
           merchantCategoryLimits: {},
           createdAt: getRandomDate(),
           updatedAt: getRandomDate(),
-        },
-        {
-          userId: user.id,
-          accountId: userAccounts.find((a) => a.type === AccountType.SAVINGS)!
-            .id,
-          cardNumber: validateCardNumber(faker.finance.creditCardNumber()),
-          type: "CREDIT",
-          expiryDate: new Date("2028-03-31"),
-          cvv: faker.finance.creditCardCVV(),
-          status: "ACTIVE",
-          creditLimit: 100000,
-          availableCredit: 75000,
-          rewardsPoints: getRandomAmount(1000, 5000),
-          pinHash: faker.string.alphanumeric(64),
-          dailyLimit: getRandomAmount(10000, 50000),
-          token: faker.string.uuid(),
-          merchantCategoryLimits: { retail: 20000, travel: 30000 },
-          createdAt: getRandomDate(),
-          updatedAt: getRandomDate(),
-        }
-      );
+        };
 
-      await tx.card.createMany({ data: cards });
+        if (account.type === AccountType.CHECKING) {
+          cards.push({
+            ...cardData,
+            type: "DEBIT",
+            expiryDate: new Date("2027-12-31"),
+            merchantCategoryLimits: {},
+          });
+        } else if (account.type === AccountType.SAVINGS) {
+          cards.push({
+            ...cardData,
+            type: "CREDIT",
+            expiryDate: new Date("2028-03-31"),
+            creditLimit: 100000,
+            availableCredit: 75000,
+            rewardsPoints: getRandomAmount(1000, 5000),
+            merchantCategoryLimits: { retail: 20000, travel: 30000 },
+          });
+        } else if (account.type === AccountType.COMPANY) {
+          cards.push({
+            ...cardData,
+            type: "CREDIT",
+            expiryDate: new Date("2028-06-30"),
+            creditLimit: 500000,
+            availableCredit: 400000,
+            rewardsPoints: getRandomAmount(5000, 10000),
+            merchantCategoryLimits: { business: 100000, travel: 75000 },
+          });
+        }
+      }
+
+      await tx.card.createMany({ data: cards, skipDuplicates: true });
       logger.debug(`Created ${cards.length} cards for user`);
 
       const notificationTypes = [

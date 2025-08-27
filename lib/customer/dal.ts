@@ -118,8 +118,10 @@ export const getAllAccounts = async () => {
       holder: `${account.user.firstName} ${account.user.lastName}`,
       type:
         account.type === AccountType.CHECKING
-          ? "Personal Checking"
-          : "Personal Savings",
+          ? "Checking Account"
+          : account.type === AccountType.SAVINGS
+          ? "Savings Account"
+          : "Company Account",
       status: account.status,
     }));
   } catch (error: unknown) {
@@ -138,6 +140,7 @@ export const getAllAccountDetails = cache(async () => {
     const accounts = await prisma.account.findMany({
       where: { userId, status: "ACTIVE" },
       select: {
+        id: true,
         balance: true,
         accountNumber: true,
         routingNumber: true,
@@ -150,18 +153,20 @@ export const getAllAccountDetails = cache(async () => {
           },
         },
       },
-      take: 2,
     });
 
     return accounts.map((account) => ({
+      id: account.id,
       balance: account.balance,
       accountNumber: account.accountNumber,
       routingNumber: account.routingNumber,
       holder: `${account.user.firstName} ${account.user.lastName}`,
       type:
         account.type === AccountType.CHECKING
-          ? "Personal Checking"
-          : "Personal Savings",
+          ? "Checking Account"
+          : account.type === AccountType.SAVINGS
+          ? "Savings Account"
+          : "Company Account",
       status: account.status,
     }));
   } catch (error: unknown) {
