@@ -10,13 +10,12 @@ import {
 import { BasicUserData } from "@/types/users";
 import { MoreVertical } from "lucide-react";
 import { useState } from "react";
-import {
-  BlockTransferDialog,
-  PopulateDataDialog,
-  ResetDataDialog,
-  SubscriptionToggleDialog,
-  UserDetailDialog,
-} from "./user-action-dialogs";
+import { SubscriptionToggleDialog } from "./action-dialogs/subscription-status";
+import { PopulateDataDialog } from "./action-dialogs/populate-data";
+import { ResetDataDialog } from "./action-dialogs/reset-data";
+import { BlockTransferDialog } from "./action-dialogs/block-transfer";
+import { UserDetailDialog } from "./action-dialogs/user-details";
+import { EditUserDialog } from "./action-dialogs/edit-user";
 
 export function UserActions({ user }: { user: BasicUserData }) {
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
@@ -24,6 +23,7 @@ export function UserActions({ user }: { user: BasicUserData }) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [blockDialogOpen, setBLockDialogOpen] = useState(false);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [editUserDialog, setEditUserDialog] = useState(false);
 
   return (
     <div className="flex justify-end">
@@ -48,6 +48,9 @@ export function UserActions({ user }: { user: BasicUserData }) {
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setDetailDialogOpen(true)}>
             View User Details
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setEditUserDialog(true)}>
+            Edit User Details
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -77,6 +80,11 @@ export function UserActions({ user }: { user: BasicUserData }) {
         user={user}
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
+      />
+      <EditUserDialog
+        user={user}
+        open={editUserDialog}
+        onOpenChange={setEditUserDialog}
       />
     </div>
   );

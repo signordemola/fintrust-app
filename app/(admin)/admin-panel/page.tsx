@@ -38,7 +38,8 @@ const AdminPanel = async () => {
                 users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
-                      {user.firstName} {user.lastName}
+                      <span className="capitalize">{user.firstName}</span>{" "}
+                      <span className="capitalize">{user.lastName}</span>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>

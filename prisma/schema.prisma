@@ -30,6 +30,7 @@ enum TransactionType {
 enum AccountType {
   CHECKING
   SAVINGS
+  COMPANY
 }
 
 enum CheckDepositStatus {

@@ -1,7 +1,14 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useState, useEffect, useRef } from "react";
+import LoadingSpinner from "../spinner";
 
 const HeroSection = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const tradingViewStyle = {
     display: "block",
     height: "100%",
@@ -44,6 +51,30 @@ const HeroSection = () => {
         color: #2962FF !important;
     }
   `;
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin === "https://www.tradingview-widget.com") {
+        setIsLoading(false);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    timeoutRef.current = setTimeout(() => {
+      setIsLoading(false);
+    }, 8000);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <section
@@ -119,7 +150,12 @@ const HeroSection = () => {
           <div className="relative hidden lg:block">
             <div className="absolute -inset-4 rounded-3xl blur-2xl opacity-30"></div>
             <div className="relative bg-gradient-to-br from-primary-600/90 to-accent-600/90 backdrop-blur-lg rounded-3xl p-8 shadow-2xl overflow-hidden h-[400px]">
-              <div className="w-full h-full">
+              {isLoading && <LoadingSpinner message="Loading market data..." />}
+              <div
+                className={`w-full h-full transition-opacity duration-500 ${
+                  isLoading ? "opacity-0" : "opacity-100"
+                }`}
+              >
                 <div
                   className="tradingview-widget-container"
                   style={{ width: "100%", height: "100%" }}
