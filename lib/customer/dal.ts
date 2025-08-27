@@ -5,7 +5,6 @@ import { getUserSession } from "../session";
 import { prisma } from "../db";
 import { endOfMonth, startOfMonth } from "date-fns";
 import {
-  AccountType,
   TransactionStatus,
   TransactionType,
 } from "@prisma/client";
@@ -101,6 +100,7 @@ export const getAllAccounts = async () => {
         id: true,
         balance: true,
         accountNumber: true,
+        routingNumber: true,
         type: true,
         status: true,
         user: {
@@ -111,17 +111,14 @@ export const getAllAccounts = async () => {
         },
       },
     });
+
     return accounts.map((account) => ({
       id: account.id,
       balance: account.balance,
       accountNumber: account.accountNumber,
+      routingNumber: account.routingNumber,
       holder: `${account.user.firstName} ${account.user.lastName}`,
-      type:
-        account.type === AccountType.CHECKING
-          ? "Checking Account"
-          : account.type === AccountType.SAVINGS
-          ? "Savings Account"
-          : "Company Account",
+      type: account.type,
       status: account.status,
     }));
   } catch (error: unknown) {
@@ -161,12 +158,7 @@ export const getAllAccountDetails = cache(async () => {
       accountNumber: account.accountNumber,
       routingNumber: account.routingNumber,
       holder: `${account.user.firstName} ${account.user.lastName}`,
-      type:
-        account.type === AccountType.CHECKING
-          ? "Checking Account"
-          : account.type === AccountType.SAVINGS
-          ? "Savings Account"
-          : "Company Account",
+      type: account.type,
       status: account.status,
     }));
   } catch (error: unknown) {

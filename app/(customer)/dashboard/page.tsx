@@ -15,6 +15,7 @@ import {
   getUserProfile,
 } from "@/lib/customer/dal";
 import { getUserSession } from "@/lib/session";
+import { AccountType } from "@prisma/client";
 
 const DashboardPage = async () => {
   const session = await getUserSession();
@@ -45,9 +46,12 @@ const DashboardPage = async () => {
   const beneficiaries = beneficiariesResult?.beneficiaries || [];
 
   const checkingAccount = allAccountDetails?.find(
-    (account) => account.type === "Personal Checking"
+    (account) => account.type === AccountType.CHECKING
   );
+
   const checkingBalance = checkingAccount ? checkingAccount.balance : 0;
+
+  console.log("All Account Details: ", allAccountDetails);
 
   return (
     <section>

@@ -3,14 +3,10 @@
 import { formatAccountNumber } from "@/lib/utils";
 import { FC, useState } from "react";
 import { toast } from "sonner";
-
-enum AccountType {
-  CHECKING = "Checking Account",
-  SAVINGS = "Savings Account",
-  COMPANY = "Company Account",
-}
+import { AccountType } from "@prisma/client";
 
 interface Account {
+  id: string;
   balance: number;
   accountNumber: string;
   routingNumber: string;
@@ -45,6 +41,7 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
     allAccountDetails && allAccountDetails.length > 0
       ? allAccountDetails[selectedAccountIndex]
       : {
+          id: "",
           balance: 0,
           accountNumber: "N/A",
           routingNumber: "N/A",
@@ -52,6 +49,17 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
           type: AccountType.CHECKING,
           status: "Inactive",
         };
+
+  const getAccountDisplayName = (type: AccountType): string => {
+    switch (type) {
+      case AccountType.CHECKING:
+        return "Checking Account";
+      case AccountType.SAVINGS:
+        return "Savings Account";
+      case AccountType.COMPANY:
+        return "Company Account";
+    }
+  };
 
   const handleToggleAccount = () => {
     if (allAccountDetails && allAccountDetails.length > 1) {
@@ -63,11 +71,13 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
 
   const nextAccountType =
     allAccountDetails && allAccountDetails.length > 1
-      ? allAccountDetails[
-          selectedAccountIndex === allAccountDetails.length - 1
-            ? 0
-            : selectedAccountIndex + 1
-        ].type
+      ? getAccountDisplayName(
+          allAccountDetails[
+            selectedAccountIndex === allAccountDetails.length - 1
+              ? 0
+              : selectedAccountIndex + 1
+          ].type
+        )
       : "No additional accounts";
 
   return (
@@ -80,7 +90,7 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">
-                {account.type}
+                {getAccountDisplayName(account.type)}
               </h2>
               <p className="text-sm text-gray-500">
                 {account.type === AccountType.COMPANY
@@ -127,7 +137,7 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
               </p>
               <div className="mt-4 flex items-center">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                  {account.type}
+                  {getAccountDisplayName(account.type)}
                 </span>
               </div>
             </div>
@@ -196,7 +206,7 @@ const AccountOverview: FC<AccountOverviewProps> = ({ allAccountDetails }) => {
               <div>
                 <p className="text-sm text-gray-500">Account Type</p>
                 <p className="text-base font-medium text-gray-900">
-                  {account.type}
+                  {getAccountDisplayName(account.type)}
                 </p>
               </div>
               <div>
